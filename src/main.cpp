@@ -22,36 +22,34 @@
 
 using namespace vex;
 
-// A global instance of competition
-competition Competition;
+competition Competition;                                // A global instance of competition
 
 void pre_auton(void) {
-  // Initializing Robot Configuration.
-  vexcodeInit();                                
+  vexcodeInit();                                        // Initializing Robot Configuration.
 }
 
 int detectColor(){
   int sHue = Optical.hue();
 
-  if ( 330 <= sHue || sHue < 30){               // red
+  if ( 330 <= sHue || sHue < 30){                       // Red
     return 1;
   }
-  else if ( 210 <= sHue && sHue <= 270 ){       // blue
+  else if ( 210 <= sHue && sHue <= 270 ){               // Blue
     return 2;
   }
-  else {                                        // ???
+  else {                                                // ???
     return 0;
   }
 }
 
 void roller(int colour){
-  Optical.setLight(ledState::on);               // LED helps with color detection
+  Optical.setLight(ledState::on);                       // LED helps with color detection
   while (1) {
-    if (detectColor() != colour){               // If color is undesired retry
+    if (detectColor() != colour){                       // If color is undesired retry
       intake.spinFor(forward, 60, degrees);
       Controller1.Screen.print(detectColor());
     }
-    else {                                      // Else return
+    else {                                              // Else return
       Controller1.Screen.print(detectColor());
       break;
     }
@@ -60,140 +58,92 @@ void roller(int colour){
 }
 
 void shoot(){
-  // Start flywheel
-  flywheel.spin(reverse);
+  flywheel.spin(reverse);                               // Start flywheel
   wait(2, seconds);
 
-  // Start indexer
-  indexer.spin(reverse);
+  indexer.spin(reverse);                                // Start indexer
   wait(10, seconds);
 
-  // Stop everything assuming the shot is finished
-  indexer.stop();
+  indexer.stop();                                       // Stop everything assuming the shot is finished
   flywheel.stop();
 }
 
 
 void autonomous(void) {
-  const int rbposition = 2;                   // 1 = in front of roller;  2 = next to roller
-  const int colour = 1;                       // 1 = results in blue;     2 = results in red
+  const int robotPos = 2;                               // 1 = in front of roller;  2 = next to roller
+  const int colour = 1;                                 // 1 = results in blue;     2 = results in red
 
-  // Initial Config
-  intake.setVelocity(20, percent);
+  intake.setVelocity(20, percent);                      // Initial Config
   flywheel.setVelocity(50, percent); 
   indexer.setVelocity(100, percent);
   Drivetrain.setTurnVelocity(5,percent);
 
-  if (rbposition == 1) {
-    // Adjust for low shot
-    flywheel.setVelocity(50, percent); 
+  if (robotPos == 1) {
+    flywheel.setVelocity(50, percent);                  // Adjust for low shot
 
-    // Drive Up to Roller
-    Drivetrain.driveFor(reverse, 1, inches);
+    Drivetrain.driveFor(reverse, 1, inches);            // Drive Up to Roller
 
-    // Turn the roller
-    roller(colour);
+    roller(colour);                                     // Turn the roller
 
-    // Drive away from roller
-    Drivetrain.driveFor(forward, 3, inches);
+    Drivetrain.driveFor(forward, 3, inches);            // Drive away from roller
 
-    // Shoot preload
-    Drivetrain.turnFor(right, 35, degrees, false);
+    Drivetrain.turnFor(right, 35, degrees, false);      // Shoot preload
     wait(2, seconds);
     shoot();
   }
 
-  if (rbposition == 2) {
-    // Adjust for low shot
-    flywheel.setVelocity(80, percent); 
+  if (robotPos == 2) {
+    flywheel.setVelocity(80, percent);                  // Adjust for low shot
 
-    // Drive up to roller
-    Drivetrain.driveFor(reverse, 7, inches);
+    Drivetrain.driveFor(reverse, 7, inches);            // Drive up to roller
     Drivetrain.turnFor(right, 38, degrees, false);
     wait(2.5, seconds);
     Drivetrain.setDriveVelocity(15, percent);
     Drivetrain.driveFor(reverse, 3.5, inches);
 
-    // Turn the roller
-    roller(colour);
+    roller(colour);                                     // Turn the roller
 
-    // Drive away from roller
-    Drivetrain.driveFor(forward, 3.5, inches, false);
-
-    // Shoot preload
+    Drivetrain.driveFor(forward, 3.5, inches, false);   // Drive away from roller
     wait(1, seconds);
-    Drivetrain.turnFor(left, 50, degrees);
+
+    Drivetrain.turnFor(left, 50, degrees);              // Shoot preload
     shoot();
   }
 }
 
 
 void usercontrol(void) {
-  // User control code here, inside the loop
   while (1) {
-    // START Flywheel
-    if (Controller1.ButtonL1.pressing()){
-      flywheel.spin(reverse,100,velocityUnits::pct);
-      flywheel.setStopping(brakeType::coast);
+    flywheel.setVelocity(100, percent);                 // Set motors to a high velocity
+    indexer.setVelocity(90, percent);
+    intake.setVelocity(100, percent); 
+
+    flywheel.setStopping(brakeType::coast);             // Set the beakeType to coast (Makes buttons act like a toggle)
+    indexer.setStopping(brakeType::coast);
+    intake.setStopping(brakeType::coast);
+
+    if (Controller1.ButtonLeft.pressing()){             // (<) : Stop Flywheel
+      flywheel.stop();
     }
 
-    else if (Controller1.ButtonL2.pressing()){
-      flywheel.spin(forward,100,velocityUnits::pct);
-      flywheel.setStopping(brakeType::coast);
+    else if (Controller1.ButtonRight.pressing()){       // (>) : Stop Indexer
+      indexer.stop();
     }
 
-    else if (Controller1.ButtonLeft.pressing()){
-      flywheel.stop(brakeType::coast);
-    }
-    // END Flywheel
-
-    // START Indexer
-    if (Controller1.ButtonUp.pressing()){
-      indexer.spin(reverse,90,velocityUnits::pct);
-      indexer.setStopping(brakeType::coast);
+    else if (Controller1.ButtonY.pressing()){           // (Y) : Stop Intake
+      intake.stop();
     }
 
-    else if (Controller1.ButtonDown.pressing()){
-      indexer.spin(forward,90,velocityUnits::pct);
-      indexer.setStopping(brakeType::coast);
-    }
-  
-    else if (Controller1.ButtonRight.pressing()){
-      indexer.stop(brakeType::coast);
-    }
-    // END Indexer
-
-    // START Intake    
-    if (Controller1.ButtonB.pressing()){
-      intake.spin(reverse,100,velocityUnits::pct);
-      intake.setStopping(brakeType::coast);
-    }
-
-    else if (Controller1.ButtonX.pressing()){
-      intake.spin(forward,100,velocityUnits::pct);
-      intake.setStopping(brakeType::coast);
-    }
-
-    else if (Controller1.ButtonY.pressing()){
-      intake.stop(brakeType::hold);
-    }
-    // END Intake
-
-    wait(20, msec); // Sleep the task for a short amount of time to prevent wasted resources.
+    wait(20, msec);                                     // Sleep the task for a short amount of time to prevent wasted resources.
   }
 }
 
 
-// Set up the competition functions and callbacks.
-int main() {
-  // Set up callbacks for autonomous and driver control periods.
+int main() {                                            // DON'T screw with this 
   Competition.autonomous(autonomous);
   Competition.drivercontrol(usercontrol);
-
-  // Run the pre-autonomous function.
   pre_auton();
 
-  // Prevent main from exiting with an infinite loop.
   while (true) {
     wait(100, msec);
   }
