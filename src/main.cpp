@@ -19,6 +19,7 @@
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 #include "vex.h"
+#include "vex_global.h"
 
 using namespace vex;
 
@@ -43,6 +44,7 @@ int detectColor(){
 }
 
 void roller(int colour){
+  Optical.setLightPower(100, pct);                      // Set LED to 100% Brightness
   Optical.setLight(ledState::on);                       // LED helps with color detection
   while (1) {
     if (detectColor() != colour){                       // If color is undesired retry
@@ -54,15 +56,20 @@ void roller(int colour){
       break;
     }
   }
+  intake.spinFor(reverse, 30, degrees);
+
   Optical.setLight(ledState::off);
 }
 
 void shoot(){
   flywheel.spin(reverse);                               // Start flywheel
-  wait(2, seconds);
+  wait(4, seconds);
 
-  indexer.spin(reverse);                                // Start indexer
-  wait(10, seconds);
+  indexer.spinFor(reverse, 800, degrees);
+  wait(2, seconds);
+  indexer.spinFor(reverse, 800, degrees);
+  wait(2, seconds);
+  
 
   indexer.stop();                                       // Stop everything assuming the shot is finished
   flywheel.stop();
@@ -70,8 +77,9 @@ void shoot(){
 
 
 void autonomous(void) {
-  const int robotPos = 2;                               // 1 = in front of roller;  2 = next to roller
-  const int colour = 1;                                 // 1 = results in blue;     2 = results in red
+  const int robotPos = 1;                               // 1 = in front of roller;  2 = next to roller
+  const int colour = 2;                                 // 1 = results in blue;     2 = results in red
+  const int partnerAuto = 0;                            // 0 = Partner has no auto; 1 = Partner has auto
 
   intake.setVelocity(20, percent);                      // Initial Config
   flywheel.setVelocity(50, percent); 
@@ -79,17 +87,21 @@ void autonomous(void) {
   Drivetrain.setTurnVelocity(5,percent);
 
   if (robotPos == 1) {
-    flywheel.setVelocity(50, percent);                  // Adjust for low shot
+    flywheel.setVelocity(100, percent);                  // Adjust for low shot
 
     Drivetrain.driveFor(reverse, 1, inches);            // Drive Up to Roller
 
     roller(colour);                                     // Turn the roller
 
-    Drivetrain.driveFor(forward, 3, inches);            // Drive away from roller
+    Drivetrain.driveFor(forward, 2, inches);            // Drive away from roller
 
-    Drivetrain.turnFor(right, 35, degrees, false);      // Shoot preload
+    Drivetrain.turnFor(left, 19, degrees, false);       // Shoot preload
     wait(2, seconds);
     shoot();
+
+    if (partnerAuto == 0) {
+      return;
+    } 
   }
 
   if (robotPos == 2) {
@@ -108,31 +120,68 @@ void autonomous(void) {
 
     Drivetrain.turnFor(left, 50, degrees);              // Shoot preload
     shoot();
+
+    if (partnerAuto == 0){
+      return; 
+    }
   }
 }
 
 
 void usercontrol(void) {
   while (1) {
-    flywheel.setVelocity(100, percent);                 // Set motors to a high velocity
-    indexer.setVelocity(90, percent);
-    intake.setVelocity(100, percent); 
-
-    flywheel.setStopping(brakeType::coast);             // Set the beakeType to coast (Makes buttons act like a toggle)
-    indexer.setStopping(brakeType::coast);
-    intake.setStopping(brakeType::coast);
-
-    if (Controller1.ButtonLeft.pressing()){             // (<) : Stop Flywheel
-      flywheel.stop();
+    // START Flywheel
+    if (Controller1.ButtonL1.pressing()){               // (L1) : [Flywheel] Shoot
+      flywheel.spin(reverse,100,velocityUnits::pct);
+      flywheel.setStopping(brakeType::coast);
     }
 
-    else if (Controller1.ButtonRight.pressing()){       // (>) : Stop Indexer
-      indexer.stop();
+    else if (Controller1.ButtonL2.pressing()){          // (L2) : [Flywheel] Back to storage
+      flywheel.spin(forward,100,velocityUnits::pct);
+      flywheel.setStopping(brakeType::coast);
     }
 
-    else if (Controller1.ButtonY.pressing()){           // (Y) : Stop Intake
-      intake.stop();
+    else if (Controller1.ButtonLeft.pressing()){        // (<)  : [Flywheel] Stop
+      flywheel.stop(brakeType::coast);
     }
+    // END Flywheel
+
+    // START Indexer
+    if (Controller1.ButtonUp.pressing()){               // (^)  : [Indexer] Disk to Flywheel
+      indexer.spin(reverse,90,velocityUnits::pct);
+      indexer.setStopping(brakeType::coast);
+    }
+
+    else if(Controller1.ButtonR1.pressing()){           // (R1) : [Indexer] (1) Disk to Flywheel
+      indexer.setVelocity(100,percent);
+      indexer.spinFor(reverse, 800, degrees);
+    }
+
+    else if (Controller1.ButtonDown.pressing()){        // (V)  : [Indexer] Disk to Storage
+      indexer.spin(forward,90,velocityUnits::pct);
+      indexer.setStopping(brakeType::coast);
+    }
+
+    else if (Controller1.ButtonRight.pressing()){       // (>)  : [Indexer] Stop
+      indexer.stop(brakeType::coast);
+    }
+    // END Indexer
+
+    // START Intake    
+    if (Controller1.ButtonB.pressing()){                // (B)  : [Intake] Disk to Field
+      intake.spin(reverse,100,velocityUnits::pct);
+      intake.setStopping(brakeType::coast);
+    }
+
+    else if (Controller1.ButtonX.pressing()){           // (X)  : [Intake] Disk to Storage
+      intake.spin(forward,100,velocityUnits::pct);
+      intake.setStopping(brakeType::coast);
+    }
+
+    else if (Controller1.ButtonY.pressing()){           // (Y)  : [Intake] Stop
+      intake.stop(brakeType::hold);
+    }
+    // END Intake
 
     wait(20, msec);                                     // Sleep the task for a short amount of time to prevent wasted resources.
   }
