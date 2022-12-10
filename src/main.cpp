@@ -89,8 +89,8 @@ void shoot(){                                           // FUNCTION:  Shoots the
 
 
 void autonomous(void) {                                 // FUNCTION:  The 15s auto before the match
-  const int robotPos = 1;                                 // 1 = NEXT TO roller;  2 = IN FRONT of roller;
-  const int colour = 1;                                   // 1 = results in BLUE;     2 = results in RED;
+  const int robotPos = 2;                                 // 1 = NEXT TO roller;      2 = IN FRONT of roller;
+  const int colour = 2;                                   // 1 = Results in BLUE;     2 = Results in RED;
   const int partnerAuto = 1;                              // 0 = Partner has NO auto; 1 = Partner has auto;
 
   intake.setVelocity(20, percent);                        // Initial Config
