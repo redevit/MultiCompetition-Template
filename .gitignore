@@ -34,4 +34,7 @@
 # Build directory
 build
 .cache
+
+# Other
 .vscode
+compile_commands.json

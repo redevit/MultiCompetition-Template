@@ -89,7 +89,7 @@ void shoot(){                                           // FUNCTION:  Shoots the
 
 
 void autonomous(void) {                                 // FUNCTION:  The 15s auto before the match
-  const int robotPos = 2;                                 // 1 = NEXT TO roller;      2 = IN FRONT of roller;
+  const int robotPos = 3;                                 // 1 = NEXT TO roller;      2 = IN FRONT of roller; 3 = Full auto
   const int colour = 2;                                   // 1 = Results in BLUE;     2 = Results in RED;
   const int partnerAuto = 1;                              // 0 = Partner has NO auto; 1 = Partner has auto;
 
@@ -121,7 +121,7 @@ void autonomous(void) {                                 // FUNCTION:  The 15s au
 
   }
   else if (robotPos == 2) {                               // POSITION:  IN FRONT
-    flywheel.setVelocity(86, percent);                      // Config
+    flywheel.setVelocity(86.5, percent);                      // Config
 
     Drivetrain.driveFor(reverse, 1, inches);                // Drive Up to Roller
 
@@ -129,11 +129,34 @@ void autonomous(void) {                                 // FUNCTION:  The 15s au
 
     Drivetrain.driveFor(forward, 2, inches);                // Drive away from roller
 
-    Drivetrain.turnToHeading(343, degrees);                 // Turn towards hoop
+    Drivetrain.turnToHeading(342, degrees);                 // Turn towards hoop
     shoot();                                                // Shoot preload
 
     if (partnerAuto == 0) {                                 // TODO: If the other team has no auto
     }
+  }
+  else if (robotPos == 3) {                               // POSITION: IN FRONT WITH FULL AUTO
+
+    flywheel.setVelocity(86.5, percent);                    // Config
+
+    Drivetrain.driveFor(reverse, 1, inches);                // Drive Up to roller
+
+    roller(colour);                                         // Turn the roller
+
+    Drivetrain.driveFor(forward, 2, inches);                // Drive away from roller
+
+    Drivetrain.turnToHeading(342, degrees);                 // Turn towards hoop
+    shoot();                                                // Shoot preload
+
+    Drivetrain.driveFor(10, inches);                        // Drive Up to second roller
+    Drivetrain.turnToHeading(75, degrees);
+    Drivetrain.setDriveVelocity(15,percent);
+    Drivetrain.driveFor(reverse, 8, inches);
+    roller(colour);                                         // Turn the second roller
+
+    Drivetrain.driveFor(forward, 6, inches);                // Position on 4 tiles
+    Drivetrain.turnToHeading(120, degrees);
+    Drivetrain.driveFor(forward, 1, inches);
   }
 }
 
